@@ -11,17 +11,9 @@ import aniso8601
 from pytz import timezone
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
+
 global question
-global qcnt
-global fqcnt
-global gq
-global opt1
-global opt1
-global opt3
 pattern = []
-
-global prize
-
 question = None
 
 btk = "BEARER_TOKEN"
@@ -209,13 +201,6 @@ def on_message(ws, message):
 
 			elif getType == 'QUESTION':
 				global question
-				global qcnt
-				global fqcnt
-				global gq
-				global prize
-				global opt1
-				global opt2
-				global opt3
 				question = str(mm['body']['newText']).strip()
 				qs = mm['currentCount']
 				qcnt = int(qs) + 1
