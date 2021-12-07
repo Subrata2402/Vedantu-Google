@@ -1,0 +1,15 @@
+discord.py
+lomond
+unidecode
+datetime
+termcolor
+bs4
+colorama
+requests
+aniso8601
+pytz
+websocket
+websocket_client
+wikipedia
+pymongo
+dnspython==2.0.0
