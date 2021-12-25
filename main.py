@@ -11,15 +11,21 @@ import aniso8601
 from pytz import timezone
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
-
 global question
+global qcnt
+global fqcnt
+global gq
+global opt1
+global opt1
+global opt3
 pattern = []
+global prize
 question = None
 
 btk = "BEARER_TOKEN"
 
-web_url = "webhook_url"
-webhook_url = "webhook_url" #2nd Webhook url
+web_url = "Webhook url"
+webhook = "Webhook url"
 
 
 try:
@@ -28,14 +34,14 @@ except:
 	print('Url Invalid')
 
 try:
-	hook2 = Webhook(webhook_url)
+	hook2 = Webhook(webhook)
 except:
 	print('Url Invalid')
 
 
-data = MongoClient("https://localhost") # Put your mongodb url
+data = MongoClient('mongodb url') # Put your mongodb url
 db = data.get_database("database name") # Put your database name
-vquiz = db.questions
+vquiz = db.questions # don't need to change this
 
 upcoming = 'https://vquiz.vedantu.com/dashboard/upcoming'
 headers = {
@@ -90,7 +96,7 @@ embed=discord.Embed(
 		text=f"Vedantu Quiz"
 	)
 hook.send(embed=embed)
-#hook2.send(embed=embed)
+hook2.send(embed=embed)
 
 gameId = data['_id']
 sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId}'
@@ -201,6 +207,13 @@ def on_message(ws, message):
 
 			elif getType == 'QUESTION':
 				global question
+				global qcnt
+				global fqcnt
+				global gq
+				global prize
+				global opt1
+				global opt2
+				global opt3
 				question = str(mm['body']['newText']).strip()
 				qs = mm['currentCount']
 				qcnt = int(qs) + 1
@@ -222,9 +235,13 @@ def on_message(ws, message):
 				og3 = "https://google.com/search?q="+rq+"+"+og3
 				opt = str(f"{opt1} {opt2} {opt3}").replace(' ','+')
 				swa = "https://google.com/search?q="+rq+"+"+opt
-
+				
+				if "not" in question.lower():
+					is_not = True
+				else:
+					is_not = False
 				embed = discord.Embed(
-					title=f'**Question {qcnt} out of {fqcnt}**',
+					title=f'**Question {qcnt} out of {fqcnt}{" (Not Question)" if is_not else ""}**',
 					description=f'**[{question}]({gq})\n\n[Search with all options]({swa})**',
 					color=0x000000,
 					timestamp = datetime.datetime.utcnow()
@@ -293,6 +310,7 @@ def on_message(ws, message):
 				hook.send(embed=embed)
 				hook2.send(embed=embed)
 
+
 				r = requests.get(gq)
 				soup = BeautifulSoup(r.text , "html.parser")
 				result = soup.find("div" , class_='BNeawe').text
@@ -335,7 +353,7 @@ def on_message(ws, message):
 				hook.send(embed=embed)
 				hook2.send(embed=embed)
 
-				time.sleep(7)
+				time.sleep(6)
 				tm = Embed(title="**⏰ | Time's Up!**", color=0x000000)
 				hook.send(embed=tm)
 				hook2.send(embed=tm)
@@ -348,14 +366,15 @@ def on_message(ws, message):
 				pattern.append(ansNum)
 				check = vquiz.find_one({"question": question})
 				if check == None:
-					vquiz.insert_one({
+					q = {
 					    "question": question,
 					    "option_1": opt1,
 					    "option_2": opt2,
 					    "option_3": opt3,
 					    "answer": answer,
 					    "option": ansNum
-					})
+                    }
+					vquiz.insert_one(q)
 				s = 0
 				for i in countData:
 					s = s + int(countData[i])
@@ -432,9 +451,9 @@ def on_message(ws, message):
 				
 		
 def on_error(ws, error):
-	print('Error')
+	hook.send('Error')
 def on_close(ws):
-	print('Closed')
+	hook.send('Closed')
 
 def on_open(ws):
 	def run(*args):
@@ -445,11 +464,8 @@ def on_open(ws):
 				time.sleep(15)
 				ws.send('2')
 			except:
-				print('Unable to connect With Socket..')
+				hook.send('Unable to connect With Socket..')
 				break
-		time.sleep(1)
-		ws.close()
-		print('Thread Terminating..')
 	thread.start_new_thread(run, ())
 
 if __name__ == "__main__":
