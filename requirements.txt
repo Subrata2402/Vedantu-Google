@@ -13,3 +13,4 @@ websocket_client
 wikipedia
 pymongo
 dnspython==2.0.0
+dhooks
