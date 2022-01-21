@@ -380,19 +380,13 @@ def on_message(ws, message):
 					s = s + int(countData[i])
 				advancing = countData[ansNum]
 				eliminated = s - int(advancing)
-				if int(advancing) != 0:
-					ans = (int(prize))/(int(advancing))
-					payout = float("{:.2f}".format(ans))
-					percentAdvancing = (int(advancing)*(100))/s
-					pA = float("{:.2f}".format(percentAdvancing))
-				else:
-					pA = 0.0
-					payout = 0.0
-				if int(eliminated) != 0:
-					percentEliminated = (int(eliminated)*(100))/s
-					pE = float("{:.2f}".format(percentEliminated))
-				else:
-					pE = 0.0
+				ans = (int(prize))/(int(advancing))
+				payout = float("{:.2f}".format(ans))
+				percentAdvancing = (int(advancing)*(100))/s
+				pA = float("{:.2f}".format(percentAdvancing))
+				percentEliminated = (int(eliminated)*(100))/s
+				pE = float("{:.2f}".format(percentEliminated))
+			
 				if ansNum == '1':
 					ansNum = "１"
 				if ansNum == '2':
@@ -428,14 +422,11 @@ def on_message(ws, message):
 			elif getType == 'WINNER':
 				tw = mm['winnerCount']
 				top = mm['totalParticpants']
-				if int(tw) != 0:
-					ans = (int(prize))/(int(tw))
-					payout = float("{:.2f}".format(ans))
-					an = (int(tw)*100)/(int(top))
-					pA = float("{:.2f}".format(an))
-				else:
-					payout = 0.0
-					pA = 0.0
+				ans = (int(prize))/(int(tw))
+				payout = float("{:.2f}".format(ans))
+				an = (int(tw)*100)/(int(top))
+				pA = float("{:.2f}".format(an))
+				
 				embed = discord.Embed(
 					title='**__Game Summary !__**',
 					description=f"● **Payout : ₹{payout}**\n● **Prize Money : ₹{prize}**\n● **Total Winners : {tw} ({pA}%)**\n● **Total Players Played : {top}**",
