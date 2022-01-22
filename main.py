@@ -41,8 +41,8 @@ def gameId():
 	data = r['result'][0]
 	global prize
 	prize = data["prizeAmount"]
-	return gameId = data['_id']
-	
+	gameId = data['_id']
+	return gameId
 
 def c1():
 	sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId()}'
@@ -85,7 +85,8 @@ def SID():
 		rdata = r.text
 		rdata = rdata[rdata.find('{'):]
 		rjson = json.loads(rdata)
-		return SID = rjson["sid"]
+		SID = rjson["sid"]
+		return SID
 	except:
 		print('SID Error...')
 
@@ -116,7 +117,7 @@ def c2():
 		print('Cookie error')
 
 def header():
-	return header = {
+	header = {
 		'Upgrade':'websocket',
 		'Connection':'Upgrade',
 		'Sec-WebSocket-Key':'zKIu+BwuI++DC9+ZMBv4Ow==',
@@ -127,6 +128,7 @@ def header():
 		'Accept-Encoding':'gzip',
 		'User-Agent':'okhttp/3.14.4'
 	}
+	return header
 
 try:
 	import thread
