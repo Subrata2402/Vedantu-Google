@@ -16,9 +16,9 @@ global question
 pattern = []
 question = None
 
-btk = os.env["TOKEN"] or ""
+btk = os.getenv("TOKEN") or ""
 
-web_url = os.env["WEBHOOK_URL"] or ""
+web_url = os.getenv("WEBHOOK_URL") or ""
 
 try:
 	hook = Webhook(web_url)
