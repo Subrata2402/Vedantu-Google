@@ -44,12 +44,12 @@ def gameId():
 	gameId = data['_id']
 	return gameId
 
-def c1():
-	sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId()}'
+def c1(gameId):
+	sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId}'
 	
 	headers = {
 		'method':'GET',
-		'path':f'/socket.io/?EIO=3&transport=polling&quizId={gameId()}',
+		'path':f'/socket.io/?EIO=3&transport=polling&quizId={gameId}',
 		'authority':'vquiz.vedantu.com',
 		'scheme':'https',
 		'accept':'*/*',
@@ -66,12 +66,12 @@ def c1():
 	except:
 		print('Cookie error')
 
-def SID():
-	sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId()}'
+def SID(gameId):
+	sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId}'
 	
 	headers = {
 		'method':'GET',
-		'path':f'/socket.io/?EIO=3&transport=polling&quizId={gameId()}',
+		'path':f'/socket.io/?EIO=3&transport=polling&quizId={gameId}',
 		'authority':'vquiz.vedantu.com',
 		'scheme':'https',
 		'accept':'*/*',
@@ -90,10 +90,7 @@ def SID():
 	except:
 		print('SID Error...')
 
-def c2():
-	c1 = c1()
-	SID = SID()
-	gameId = gameId()
+def c2(c1, SID, gameId):
 	first = f'https://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID}&transport=polling&quizId={gameId}'
 	headers = {
 		'method':'GET',
@@ -116,14 +113,14 @@ def c2():
 	except:
 		print('Cookie error')
 
-def header():
+def header(c2):
 	header = {
 		'Upgrade':'websocket',
 		'Connection':'Upgrade',
 		'Sec-WebSocket-Key':'zKIu+BwuI++DC9+ZMBv4Ow==',
 		'Sec-WebSocket-Version':'13',
 		'X-Ved-Token': btk,
-		'Cookie':c2(),
+		'Cookie':c2,
 		'Host':'vquiz.vedantu.com',
 		'Accept-Encoding':'gzip',
 		'User-Agent':'okhttp/3.14.4'
@@ -368,12 +365,17 @@ def on_open(ws):
 
 if __name__ == "__main__":
 	websocket.enableTrace(True)
-	ws = websocket.WebSocketApp(f'wss://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID()}&transport=websocket&quizId={gameId()}',
+	gameId = gameId()
+	SID = SID(gameId)
+	c1 = c1(gameId)
+	c2 = c2(c1, SID, gameId)
+	header = header(c2)
+	ws = websocket.WebSocketApp(f'wss://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID}&transport=websocket&quizId={gameId}',
 		                        on_message = on_message,
 		                        on_error= on_error,
 		                        on_close = on_close,
-		                        cookie = c2(),
-		                        header = header())
+		                        cookie = c2,
+		                        header = header)
 
 	ws.on_open = on_open
 	ws.run_forever()
