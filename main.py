@@ -347,8 +347,6 @@ def on_message(ws, message):
 		
 def on_error(ws, error):
 	hook.send('Error')
-def on_close(ws):
-	hook.send('Closed')
 
 def on_open(ws):
 	def run(*args):
@@ -373,7 +371,6 @@ if __name__ == "__main__":
 	ws = websocket.WebSocketApp(f'wss://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID}&transport=websocket&quizId={gameId}',
 		                        on_message = on_message,
 		                        on_error= on_error,
-		                        on_close = on_close,
 		                        cookie = c2,
 		                        header = header)
 
