@@ -8,7 +8,6 @@ colorama
 requests
 aniso8601
 pytz
-websocket
 websocket_client
 wikipedia
 pymongo
