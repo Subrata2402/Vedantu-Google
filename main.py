@@ -3,7 +3,6 @@ import requests
 import json
 import time
 import datetime
-import os
 from lomond import WebSocket
 from dhooks import Webhook, Embed
 import websocket
@@ -13,119 +12,170 @@ from pytz import timezone
 from bs4 import BeautifulSoup
 from pymongo import MongoClient
 global question
+global qcnt
+global fqcnt
+global gq
+global opt1
+global opt1
+global opt3
 pattern = []
+global prize
 question = None
 
-btk = os.getenv("TOKEN") or ""
+btk = "BEARER_TOKEN"
 
-web_url = os.getenv("WEBHOOK_URL") or ""
+web_url = "Webhook url"
+webhook = "Webhook url"
+
 
 try:
 	hook = Webhook(web_url)
 except:
 	print('Url Invalid')
 
+try:
+	hook2 = Webhook(webhook)
+except:
+	print('Url Invalid')
 
-def gameId():
-	upcoming = 'https://vquiz.vedantu.com/dashboard/upcoming'
-	headers = {
-		'method':'GET',
-		'path' : '/dashboard/upcoming',
-		'authority': 'vquiz.vedantu.com',
-		'scheme':'https',
-		'x-ved-token': btk,
-		'accept-encoding':'gzip',
-		'user-agent':'okhttp/3.14.4',
-	}
-	r = requests.get(url=upcoming, headers=headers).json()
-	data = r['result'][0]
-	global prize
-	prize = data["prizeAmount"]
-	gameId = data['_id']
-	return gameId
 
-def c1(gameId):
-	sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId}'
-	
-	headers = {
-		'method':'GET',
-		'path':f'/socket.io/?EIO=3&transport=polling&quizId={gameId}',
-		'authority':'vquiz.vedantu.com',
-		'scheme':'https',
-		'accept':'*/*',
-		'x-ved-token': btk,
-		'accept-encoding':'gzip',
-		'user-agent':'okhttp/3.14.4',
-	}
-	r = requests.get(url=sid_url, headers=headers)
-	
-	try:
-		x = r.cookies
-		c1 = 'AWSALB='+ x['AWSALB']
-		return c1
-	except:
-		print('Cookie error')
+data = MongoClient('mongodb url') # Put your mongodb url
+db = data.get_database("database name") # Put your database name
+vquiz = db.questions # don't need to change this
 
-def SID(gameId):
-	sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId}'
-	
-	headers = {
-		'method':'GET',
-		'path':f'/socket.io/?EIO=3&transport=polling&quizId={gameId}',
-		'authority':'vquiz.vedantu.com',
-		'scheme':'https',
-		'accept':'*/*',
-		'x-ved-token': btk,
-		'accept-encoding':'gzip',
-		'user-agent':'okhttp/3.14.4',
-	}
-	r = requests.get(url=sid_url, headers=headers)
-	
-	try:
-		rdata = r.text
-		rdata = rdata[rdata.find('{'):]
-		rjson = json.loads(rdata)
-		SID = rjson["sid"]
-		return SID
-	except:
-		print('SID Error...')
+upcoming = 'https://vquiz.vedantu.com/dashboard/upcoming'
+headers = {
+	'method':'GET',
+	'path' : '/dashboard/upcoming',
+	'authority': 'vquiz.vedantu.com',
+	'scheme':'https',
+	'x-ved-token': btk,
+	'accept-encoding':'gzip',
+	'user-agent':'okhttp/3.14.4',
+}
 
-def c2(c1, SID, gameId):
-	first = f'https://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID}&transport=polling&quizId={gameId}'
-	headers = {
-		'method':'GET',
-		'path':f'/socket.io/?EIO=3&sid={SID}&transport=polling&quizId={gameId}',
-		'authority':'vquiz.vedantu.com',
-		'scheme':'https',
-		'accept':'*/*',
-		'x-ved-token': btk,
-		'cookie':c1,
-		'accept-encoding':'gzip',
-		'user-agent':'okhttp/3.14.4',
-	}
-	
-	r = requests.get(url=first, headers=headers)
-	
-	try:
-		x = r.cookies
-		c1 = 'AWSALB='+ x['AWSALB']
-		return c1
-	except:
-		print('Cookie error')
+r = requests.get(url=upcoming, headers=headers).json()
+data = r['result'][0]
+upt = data["updatedAt"]
+uptm = aniso8601.parse_datetime(upt)
+uptim = uptm.astimezone(timezone("Asia/Kolkata"))
+up_time = uptim.strftime("%b %d, %Y %I:%M %p")
+tim = data["startTime"]
+tm = aniso8601.parse_datetime(tim)
+x_ind = tm.astimezone(timezone("Asia/Kolkata"))
+x_indi = x_ind.strftime("%b %d, %Y %I:%M %p")
+prize = data["prizeAmount"]
+topic = data["topic"]
+time = data["startInSeconds"]
+milli=int(time)
+hours=(milli/(3600))
+hours=int(hours)
+minutes=((milli/(60))-(hours*(60)))
+minutes=int(minutes)
+seconds=((milli)-(hours*(3600))-(minutes*(60)))
+seconds=int(seconds)
+embed=discord.Embed(
+	title="**__Upcoming Vedantu Quiz !__**",
+	color=0x000000,
+	timestamp = datetime.datetime.utcnow()
+	).add_field(
+		name="Quiz Topic :",
+		value=topic,
+		inline = False
+	).add_field(
+		name="Prize Money :",
+		value=f"₹{prize}",
+		inline = False
+	).add_field(
+		name="Quiz Starts In :",
+		value=f"{hours} hours, {minutes} minutes, {seconds} seconds",
+		inline = False
+	).set_thumbnail(
+		url="https://cdn.discordapp.com/attachments/799716236442861578/805139417391824896/unnamed.png"
+	).set_footer(
+		text=f"Vedantu Quiz"
+	)
+hook.send(embed=embed)
+hook2.send(embed=embed)
 
-def header(c2):
-	header = {
-		'Upgrade':'websocket',
-		'Connection':'Upgrade',
-		'Sec-WebSocket-Key':'zKIu+BwuI++DC9+ZMBv4Ow==',
-		'Sec-WebSocket-Version':'13',
-		'X-Ved-Token': btk,
-		'Cookie':c2,
-		'Host':'vquiz.vedantu.com',
-		'Accept-Encoding':'gzip',
-		'User-Agent':'okhttp/3.14.4'
-	}
-	return header
+gameId = data['_id']
+sid_url = f'https://vquiz.vedantu.com/socket.io/?EIO=3&transport=polling&quizId={gameId}'
+
+headers = {
+	'method':'GET',
+	'path':f'/socket.io/?EIO=3&transport=polling&quizId={gameId}',
+	'authority':'vquiz.vedantu.com',
+	'scheme':'https',
+	'accept':'*/*',
+	'x-ved-token': btk,
+	'accept-encoding':'gzip',
+	'user-agent':'okhttp/3.14.4',
+}
+
+r = requests.get(url=sid_url, headers=headers)
+
+try:
+	x = r.cookies
+	c1 = 'AWSALB='+ x['AWSALB']
+except:
+	print('Cookie error')
+
+try:
+	rdata = r.text
+	rdata = rdata[rdata.find('{'):]
+	rjson = json.loads(rdata)
+	SID = rjson["sid"]
+except:
+	print('SID Error...')
+
+first = f'https://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID}&transport=polling&quizId={gameId}'
+headers = {
+	'method':'GET',
+	'path':f'/socket.io/?EIO=3&sid={SID}&transport=polling&quizId={gameId}',
+	'authority':'vquiz.vedantu.com',
+	'scheme':'https',
+	'accept':'*/*',
+	'x-ved-token': btk,
+	'cookie':c1,
+	'accept-encoding':'gzip',
+	'user-agent':'okhttp/3.14.4',
+}
+
+r = requests.get(url=first, headers=headers)
+
+try:
+	x = r.cookies
+	c1 = 'AWSALB='+ x['AWSALB']
+except:
+	print('Cookie error')
+
+second = f'https://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID}&transport=polling&quizId={gameId}'
+
+headers = {
+	'method':'GET',
+	'path':f'/socket.io/?EIO=3&sid={SID}&transport=polling&quizId={gameId}',
+	'authority':'vquiz.vedantu.com',
+	'scheme':'https',
+	'accept':'*/*',
+	'x-ved-token': btk,
+	'cookie':c1,
+	'accept-encoding':'gzip',
+	'user-agent':'okhttp/3.14.4',
+}
+
+r = requests.get(url=second, headers=headers)
+
+header = {
+	'Upgrade':'websocket',
+	'Connection':'Upgrade',
+	'Sec-WebSocket-Key':'zKIu+BwuI++DC9+ZMBv4Ow==',
+	'Sec-WebSocket-Version':'13',
+	'X-Ved-Token': btk,
+	'Cookie':c1,
+	'Host':'vquiz.vedantu.com',
+	'Accept-Encoding':'gzip',
+	'User-Agent':'okhttp/3.14.4'
+}
 
 try:
 	import thread
@@ -137,7 +187,7 @@ import time
 def on_message(ws, message):
 	if message == '3probe':
 		print('Success')
-		hook.send('Successfully Connected!')
+		#hook.send('Successfull')
 	elif message != '3':
 		
 			message = message[message.find('['):]
@@ -156,7 +206,14 @@ def on_message(ws, message):
 					print('Show not on')
 
 			elif getType == 'QUESTION':
-				global question, qcnt, fqcnt, gq, prize, opt1, opt2, opt3
+				global question
+				global qcnt
+				global fqcnt
+				global gq
+				global prize
+				global opt1
+				global opt2
+				global opt3
 				question = str(mm['body']['newText']).strip()
 				qs = mm['currentCount']
 				qcnt = int(qs) + 1
@@ -206,7 +263,23 @@ def on_message(ws, message):
 						url="https://cdn.discordapp.com/attachments/803435665898602517/805343857461821470/unnamed.png"
 					)
 				hook.send(embed=embed)
-				
+				hook2.send(embed=embed)
+
+				check = vquiz.find_one({"question": question})
+				if check != None:
+					answer = str(vquiz.find_one({"question": question})["answer"]).strip()
+					if answer == opt1:
+						option = "１"
+					elif answer == opt2:
+						option = "２"
+					else:
+						option = "３"
+					embed = Embed(
+						title=f"**__Option {option}. {answer}__**",
+						color=0x000000
+						)
+					hook.send(embed=embed)
+					hook2.send(embed=embed)
 
 				r = requests.get(gq)
 				soup = BeautifulSoup(r.text, 'html.parser')
@@ -235,7 +308,9 @@ def on_message(ws, message):
 						description=f"**１. {opt1} : {cnop1}**\n**２. {opt2} : {cnop2}**\n**３. {opt3} : {cnop3}**  ✅", 
 						color=0x000000)
 				hook.send(embed=embed)
-				
+				hook2.send(embed=embed)
+
+
 				r = requests.get(gq)
 				soup = BeautifulSoup(r.text , "html.parser")
 				result = soup.find("div" , class_='BNeawe').text
@@ -276,10 +351,12 @@ def on_message(ws, message):
 							text="Search with Google"
 							)
 				hook.send(embed=embed)
-				
+				hook2.send(embed=embed)
+
 				time.sleep(6)
 				tm = Embed(title="**⏰ | Time's Up!**", color=0x000000)
 				hook.send(embed=tm)
+				hook2.send(embed=tm)
 				
 
 			elif getType == 'SOLUTION':
@@ -287,6 +364,17 @@ def on_message(ws, message):
 				ansNum = mm['answerNumber'][0]
 				countData = mm['countData']
 				pattern.append(ansNum)
+				check = vquiz.find_one({"question": question})
+				if check == None:
+					q = {
+					    "question": question,
+					    "option_1": opt1,
+					    "option_2": opt2,
+					    "option_3": opt3,
+					    "answer": answer,
+					    "option": ansNum
+                    }
+					vquiz.insert_one(q)
 				s = 0
 				for i in countData:
 					s = s + int(countData[i])
@@ -299,7 +387,13 @@ def on_message(ws, message):
 				percentEliminated = (int(eliminated)*(100))/s
 				pE = float("{:.2f}".format(percentEliminated))
 			
-				
+				if ansNum == '1':
+					ansNum = "１"
+				if ansNum == '2':
+					ansNum = "２"
+				if ansNum == '3':
+					ansNum = "３"
+
 				embed = discord.Embed(
 					title=f"**Question {qcnt} out of {fqcnt}**",
 					description=f"**[{question}]({gq})**",
@@ -323,6 +417,7 @@ def on_message(ws, message):
 						url="https://cdn.discordapp.com/attachments/803435665898602517/805343857461821470/unnamed.png"
 					)
 				hook.send(embed=embed)
+				hook2.send(embed=embed)
 					
 			elif getType == 'WINNER':
 				tw = mm['winnerCount']
@@ -343,10 +438,13 @@ def on_message(ws, message):
 						url="https://cdn.discordapp.com/attachments/803435665898602517/805343857461821470/unnamed.png"
 						)
 				hook.send(embed=embed)
+				hook2.send(embed=embed)
 				
 		
 def on_error(ws, error):
 	hook.send('Error')
+def on_close(ws):
+	hook.send('Closed')
 
 def on_open(ws):
 	def run(*args):
@@ -363,15 +461,11 @@ def on_open(ws):
 
 if __name__ == "__main__":
 	websocket.enableTrace(True)
-	gameId = gameId()
-	SID = SID(gameId)
-	c1 = c1(gameId)
-	c2 = c2(c1, SID, gameId)
-	header = header(c2)
 	ws = websocket.WebSocketApp(f'wss://vquiz.vedantu.com/socket.io/?EIO=3&sid={SID}&transport=websocket&quizId={gameId}',
 		                        on_message = on_message,
 		                        on_error= on_error,
-		                        cookie = c2,
+		                        on_close = on_close,
+		                        cookie = c1,
 		                        header = header)
 
 	ws.on_open = on_open
